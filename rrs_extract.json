@@ -1,0 +1,19 @@
+{
+    "init":{
+	    "source_schema": "app_rrs",
+        "target_schema": "app_rrs1"
+        },
+    "sor_object":[
+	      {"obj":"road_tenure_type_code","cdc_column":"update_date"},
+          {"obj":"submission_status_code" ,"cdc_column":"update_date"},
+          {"obj":"road_submission" ,"cdc_column":"update_date"},
+          {"obj":"road_application" ,"cdc_column":"update_date"},
+          {"obj":"resource_road_tenure" ,"cdc_column":"update_date"},
+          {"obj":"road_appl_map_feature","cdc_column":"update_date"},
+          {"obj":"road_section" ,"cdc_column":"update_date"},
+          {"obj":"road_feature_class_sdw" ,"cdc_column":"update_date"},
+          {"obj":"road_org_unit_sdw" ,"cdc_column":"update_date"},
+          {"obj":"road_application_status_code" ,"cdc_column":"update_date"},
+		  {"obj":"road_section_status_code" ,"cdc_column":"update_date"},
+		  {"obj":"road_tenure_status_code" ,"cdc_column":"update_date"}]
+}
