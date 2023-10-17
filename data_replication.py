@@ -1,17 +1,15 @@
-## CHANGE: oracledb instead of Cx_oracle (same package) ## 
 import oracledb
 import psycopg2
-## CHANGE: add os for env variables ## 
 import os
 from psycopg2.extras import execute_batch
 import time
 import json
 
-oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_21_10")
+oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_21_11")
 
 # Read table information, source schema, and target schema from JSON file
-## CHANGE: file path is now the path within Docker container ## 
-with open('rrs_extract.json', 'r') as json_file:
+json_file = os.environ['extract.json']
+with open(json_file, 'r') as json_file:
     config_data = json.load(json_file)
 
 ## To-do: Pull the source and target metadata based on source-name from ODS (RRS, FTA) - follow IRS naming conventions
@@ -23,10 +21,7 @@ target_schema = config_data['init']['target_schema']
 tables_to_extract = config_data['sor_object']
 
 # record start time
-start = time.time()
-
-# CHANGE: loading config from OpenShift secrets ## 
-# CHANGE: need to test with dev/test databases for dev/test namespace ##  
+start = time.time() 
 
 # Retrieve Oracle database configuration
 oracle_username = os.environ['DB_USERNAME']
