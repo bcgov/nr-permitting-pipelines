@@ -26,6 +26,4 @@ COPY requirements.txt requirements.txt
 
 RUN pip3 install -r requirements.txt
 
-COPY rrs_extract.json rrs_extract.json
-
-CMD ["python3", "./s3_test.py"]
+CMD ["python3", "./data_replication.py"]
