@@ -1,0 +1,16 @@
+{
+    "init":{
+	    "source_schema": "the",
+        "target_schema": "fta_replication"
+        },
+    "sor_object":[
+	      {"obj":"harvesting_authority","cdc_column":"update_timestamp"},
+          {"obj":"prov_forest_use" ,"cdc_column":"update_timestamp"},
+          {"obj":"file_type_code" ,"cdc_column":"update_timestamp"},
+          {"obj":"harvest_type_code" ,"cdc_column":"update_timestamp"},
+          {"obj":"harvest_auth_status_code" ,"cdc_column":"update_timestamp"},
+          {"obj":"tenure_application_map_feature","cdc_column":"update_timestamp"},
+          {"obj":"tenure_application" ,"cdc_column":"update_timestamp"},
+          {"obj":"tenure_application_state_code" ,"cdc_column":"update_timestamp"},
+          {"obj":"tenure_application_type_code" ,"cdc_column":"update_timestamp"}]
+}
