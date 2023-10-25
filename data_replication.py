@@ -9,8 +9,8 @@ oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_21_11")
 
 # Read table information, source schema, and target schema from JSON file
 json_file = os.environ['extract.json']
-with open(json_file, 'r') as json_file:
-    config_data = json.load(json_file)
+config_data = json.loads(json_file)
+print(config_data)
 
 ## To-do: Pull the source and target metadata based on source-name from ODS (RRS, FTA) - follow IRS naming conventions
 ### source_database_name = os.environ['SOURCE']
