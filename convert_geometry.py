@@ -6,12 +6,20 @@ import psycopg2
 import os
 import io
 import time
+import json
 
-# To-do: sort out which columns are necessary to replicate
-# Pass these variables as config map: 
-# schema = 'THE'
-# table = 'HARVEST_AUTHORITY_GEOM'
-# column = 'GEOMETRY'
+# To-do: Pass these variables as .json config map
+
+config_data = json.loads(json_file)
+print(config_data)
+
+# Extract configuration data
+source_schema = config_data['init']['source_schema']
+target_schema = config_data['init']['target_schema']
+source_table = config_data['init']['source_table']
+target_table = source_table.lower()
+source_columns = config_data['source_columns']
+target_columns = source_columns.lower()
 
 # oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_21_11")
 
@@ -47,21 +55,36 @@ oracle_cursor = oracle_connection.cursor()
 postgres_cursor = postgres_connection.cursor()
 
 # Query Oracle for geometry data and convert it to WKT
-oracle_cursor.execute("SELECT SDO_UTIL.TO_WKTGEOMETRY(GEOMETRY) FROM THE.HARVEST_AUTHORITY_GEOM WHERE HARVEST_AUTHORITY_GEOM.HVA_SKEY = '52947'")
+oracle_cursor.execute(f"SELECT SDO_UTIL.TO_WKTGEOMETRY(GEOMETRY) AS GEOMETRY, {source_columns} FROM {source_schema}.{source_table}")
 
 # Fetch all geometry data from Oracle
 oracle_geometry_data = oracle_cursor.fetchall()
 
 # Insert geometry data into PostgreSQL
 for geometry_data in oracle_geometry_data:
+
+# Delete existing data in the target table
+    delete_query = f'TRUNCATE TABLE {target_schema}.{target_table}'
+    postgres_cursor.execute(delete_query)
+
     # Extract LOB geometry data from Oracle result
-    oracle_geometry_clob = geometry_data[0]
+    oracle_geometry_lob = geometry_data[0]
 
     # Convert LOB to text
-    oracle_geometry_wkt = oracle_geometry_clob.read()
+    oracle_geometry_wkt = oracle_geometry_lob.read()
 
-    # Insert the geometry data into PostgreSQL
-    postgres_cursor.execute("INSERT INTO geometry.harvest_authority_geom (geometry) VALUES (ST_GeomFromText(%s))", [oracle_geometry_wkt])
+    # Create list with remaining values
+    other_values = geometry_data[1:]
+
+    # Convert the list to a string without parentheses
+    other_values_text = ', '.join(map(str, other_values))
+
+    sql = f"INSERT INTO {target_schema}.{target_table} (geometry, {target_columns}) VALUES ((ST_GeomFromText('{oracle_geometry_wkt}')), {other_values_text})"
+    print(sql)
+
+    ## WORKS ##
+    # Insert the data into PostgreSQL
+    postgres_cursor.execute(f"INSERT INTO {target_schema}.{target_table} (geometry, {target_columns}) VALUES ((ST_GeomFromText('{oracle_geometry_wkt}')), {other_values_text})")
 
 # Commit the changes and close the connections
 postgres_connection.commit()
