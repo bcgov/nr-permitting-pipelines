@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: permitting-pipeline-test
+  name: permitting-pipeline
   namespace: a1b9b0-dev
 spec:
   selector:
@@ -13,7 +13,7 @@ spec:
       labels:
         DataClass: High
         app: httpd
-        deployment: permitting-pipeline-test
+        deployment: permitting-pipeline
     spec:
       containers:
         - name: permitting-pipeline-test
