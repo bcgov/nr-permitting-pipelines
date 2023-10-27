@@ -5,7 +5,7 @@
 import psycopg2
 import psycopg2.pool
 import psycopg2.extras
-import cx_Oracle
+import oracledb
 from psycopg2.extras import execute_batch
 import configparser
 import time
@@ -13,6 +13,7 @@ import json  # Import the json module
 import concurrent.futures
 from datetime import datetime
 import sys
+import os
 
 oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_21_12")
 
@@ -52,8 +53,8 @@ concurrent_tasks = 5
 
 
 # Set up Oracle connection pool
-dsn = cx_Oracle.makedsn(host=oracle_host, port=oracle_port, service_name=oracle_database)
-OrcPool = cx_Oracle.SessionPool(user=oracle_username, password=oracle_password, dsn=dsn, min=concurrent_tasks,
+dsn = oracledb.makedsn(host=oracle_host, port=oracle_port, service_name=oracle_database)
+OrcPool = oracledb.SessionPool(user=oracle_username, password=oracle_password, dsn=dsn, min=concurrent_tasks,
                              max=concurrent_tasks, increment=1, encoding="UTF-8")
 print(oracle_host, oracle_port, oracle_database, oracle_username, oracle_password)
 print('Oracle Pool Successful')
