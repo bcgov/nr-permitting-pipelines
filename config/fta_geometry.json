@@ -1,0 +1,9 @@
+{
+    "init":{
+	    "source_schema": "THE",
+        "target_schema": "geometry"
+        },
+    "source_table" : "HARVEST_AUTHORITY_GEOM", 
+    "target_table" : "harvest_authority_geom",
+    "source_columns" : "HVA_SKEY, MAP_FEATURE_ID, FEATURE_AREA, FEATURE_PERIMETER"
+}
