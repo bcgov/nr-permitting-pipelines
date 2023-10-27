@@ -9,6 +9,7 @@ import time
 import json
 
 # Grab config map
+json_file = os.environ['extract.json']
 config_data = json.loads(json_file)
 print(config_data)
 
