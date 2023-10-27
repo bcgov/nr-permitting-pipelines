@@ -55,17 +55,17 @@ oracle_cursor = oracle_connection.cursor()
 postgres_cursor = postgres_connection.cursor()
 
 # Query Oracle for geometry data and convert it to WKT
-oracle_cursor.execute(f"SELECT SDO_UTIL.TO_WKTGEOMETRY(GEOMETRY) AS GEOMETRY, {source_columns} FROM {source_schema}.{source_table}")
+oracle_cursor.execute(f"SELECT SDO_UTIL.TO_WKTGEOMETRY(GEOMETRY) AS GEOMETRY, {source_columns} FROM {source_schema}.{source_table} WHERE GEOMETRY IS NOT NULL")
 
 # Fetch all geometry data from Oracle
 oracle_geometry_data = oracle_cursor.fetchall()
 
+# Delete existing data in the target table
+delete_query = f'TRUNCATE TABLE {target_schema}.{target_table}'
+postgres_cursor.execute(delete_query)
+
 # Insert geometry data into PostgreSQL
 for geometry_data in oracle_geometry_data:
-
-# Delete existing data in the target table
-    delete_query = f'TRUNCATE TABLE {target_schema}.{target_table}'
-    postgres_cursor.execute(delete_query)
 
     # Extract LOB geometry data from Oracle result
     oracle_geometry_lob = geometry_data[0]
