@@ -5,7 +5,7 @@ from psycopg2.extras import execute_batch
 import time
 import json
 
-oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_21_11")
+oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_21_12")
 
 # Read table information, source schema, and target schema from JSON file
 json_file = os.environ['extract.json']
