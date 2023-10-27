@@ -8,8 +8,7 @@ import io
 import time
 import json
 
-# To-do: Pass these variables as .json config map
-
+# Grab config map
 config_data = json.loads(json_file)
 print(config_data)
 
@@ -21,7 +20,7 @@ target_table = source_table.lower()
 source_columns = config_data['source_columns']
 target_columns = source_columns.lower()
 
-# oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_21_11")
+# oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_21_12")
 
 # record start time
 start = time.time() 
@@ -93,4 +92,4 @@ postgres_connection.commit()
 end = time.time()
 
 print("Geometry conversion completed successfully.")
-print("The time of execution of the program is:", (end - start) * 1000, "ms")
+print("The time of execution of the program is:", (end - start) , "seconds")
