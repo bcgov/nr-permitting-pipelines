@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('mstr_schema', help='Schema where cdc_master_table_list table exists')  # positional argument 1
 parser.add_argument('app_name', help='Application name for which tables should be replicated. Note only active tables will be replicated')     # positional argument 2
-parser.add_argument('-l', '--exec_local',action='store_true', help='Only specificy the hook -l when local exeucution is desired. By default program assumes exeution in OpenShift')
+parser.add_argument('-l', '--exec_local',action='store_true', help='Only specify the hook -l when local exeucution is desired. By default program assumes exeution in OpenShift')
 args = parser.parse_args()
 
 mstr_schema = args.mstr_schema
