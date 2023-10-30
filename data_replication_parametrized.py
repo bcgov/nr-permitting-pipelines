@@ -9,15 +9,14 @@ import psycopg2.extras
 from psycopg2.extras import execute_batch
 import configparser
 import time
-import json  # Import the json module
+import json
 import concurrent.futures
 from datetime import datetime
 import sys
 import os
 import argparse
 
-# In[2]: uncomment for openshift
-#oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_21_12")
+# In[2]: Adding args
 parser = argparse.ArgumentParser(
                     prog='data_replication_parametrized',
                     description='Replication job to replicate tables in Openshift using concurrency',
