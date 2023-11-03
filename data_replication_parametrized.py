@@ -54,7 +54,7 @@ else:
     import cx_Oracle as oracledb 
     # Load the configuration file
     config = configparser.ConfigParser()
-    config.read('C:/ODS/config.ini')
+    config.read('./.cred/config.ini')
     # In[3]: Retrieve Oracle database configuration
     oracle_username = config['oracle']['username']
     oracle_password = config['oracle']['password']
