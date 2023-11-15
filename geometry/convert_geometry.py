@@ -1,6 +1,6 @@
 # Convert Oracle geometry to WKT: SDO_UTIL.TO_WKTGEOMETRY()
 # Convert WKT to PostgreSQL: ST_GeomFromText()
-
+# Call columns 'geom' in Postgres?
 import oracledb
 import psycopg2
 import os
@@ -21,7 +21,7 @@ target_table = source_table.lower()
 source_columns = config_data['source_columns']
 target_columns = source_columns.lower()
 
-# oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_21_12")
+# oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_21_11")
 
 # record start time
 start = time.time() 
@@ -79,12 +79,8 @@ for geometry_data in oracle_geometry_data:
     # Convert the list to a string without parentheses
     other_values_text = ', '.join(map(str, other_values))
 
-    sql = f"INSERT INTO {target_schema}.{target_table} (geometry, {target_columns}) VALUES ((ST_GeomFromText('{oracle_geometry_wkt}')), {other_values_text})"
-    print(sql)
-
-    ## WORKS ##
     # Insert the data into PostgreSQL
-    postgres_cursor.execute(f"INSERT INTO {target_schema}.{target_table} (geometry, {target_columns}) VALUES ((ST_GeomFromText('{oracle_geometry_wkt}')), {other_values_text})")
+    postgres_cursor.execute(f"INSERT INTO {target_schema}.{target_table} (geometry, {target_columns}) VALUES ((ST_GeomFromText('{oracle_geometry_wkt}', 3005)), {other_values_text})")
 
 # Commit the changes and close the connections
 postgres_connection.commit()
