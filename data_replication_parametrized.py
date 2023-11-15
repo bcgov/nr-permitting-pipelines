@@ -1,77 +1,90 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[1]: Imports
+# refer if block at line 38, some imports are conditional
 import psycopg2
 import psycopg2.pool
 import psycopg2.extras
-import oracledb
 from psycopg2.extras import execute_batch
 import configparser
 import time
-import json  # Import the json module
+import json
 import concurrent.futures
 from datetime import datetime
 import sys
 import os
+import argparse
 
-oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_21_12")
+# In[2]: Adding args
+parser = argparse.ArgumentParser(
+                    prog='data_replication_parametrized',
+                    description='Replication job to replicate tables in Openshift using concurrency',
+                    epilog='For more info visit https://github.com/bcgov/nr-permitting-pipelines/')                  
 
-#mstr_schema=sys.argv[1]
-#app_name=sys.argv[2]
+parser.add_argument('mstr_schema', help='Schema where cdc_master_table_list table exists')  # positional argument 1
+parser.add_argument('app_name', help='Application name for which tables should be replicated. Note only active tables will be replicated')     # positional argument 2
+parser.add_argument('-c','--concurrency',type= int, default= 5, help='Concurrency to control how many tables are replicated in parallel. Provide a number between 1 and 5')
+parser.add_argument('-l', '--exec_local',action='store_true', help='Only specify the hook -l when local exeucution is desired. By default program assumes execution in OpenShift')
+args = parser.parse_args()
 
-mstr_schema='app_rrs1'
-app_name='FTA'
-
-
+mstr_schema = args.mstr_schema
+app_name    = args.app_name
+execute_locally     = args.exec_local
+print(f'Master Schema : {mstr_schema}, App Name: {app_name}, Execute Locally: {execute_locally}')
 
 start = time.time()
 
-# Load the configuration file
-#config = configparser.ConfigParser()
-#config.read('C:/ODS/config_fta.ini')
+if not execute_locally:
+    import oracledb 
+    oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_21_12")
+    # In[3]: Retrieve Oracle database configuration
+    oracle_username = os.environ['DB_USERNAME']
+    oracle_password = os.environ['DB_PASSWORD']
+    oracle_host = os.environ['DB_HOST']
+    oracle_port = os.environ['DB_PORT']
+    oracle_database = os.environ['DATABASE']
+    # In[4]: Retrieve Postgres database configuration
+    postgres_username = os.environ['ODS_USERNAME']
+    postgres_password = os.environ['ODS_PASSWORD']
+    postgres_host = os.environ['ODS_HOST']
+    postgres_port = os.environ['ODS_PORT']
+    postgres_database = os.environ['ODS_DATABASE']
+else:
+    import cx_Oracle as oracledb 
+    # Load the configuration file
+    config = configparser.ConfigParser()
+    config.read('./.cred/config.ini')
+    # In[3]: Retrieve Oracle database configuration
+    oracle_username = config['oracle']['username']
+    oracle_password = config['oracle']['password']
+    oracle_host = config['oracle']['host']
+    oracle_port = config['oracle']['port']
+    oracle_database = config['oracle']['database']
+    # In[4]: Retrieve Postgres database configuration
+    postgres_username = config['postgres']['username']
+    postgres_password = config['postgres']['password']
+    postgres_host = config['postgres']['host']
+    postgres_port = config['postgres']['port']
+    postgres_database = config['postgres']['database']
 
-# Retrieve Oracle database configuration
-oracle_username = os.environ['DB_USERNAME']
-oracle_password = os.environ['DB_PASSWORD']
-oracle_host = os.environ['DB_HOST']
-oracle_port = os.environ['DB_PORT']
-oracle_database = os.environ['DATABASE']
+#In[5]: Concurrent tasks - number of tables to be replicated in parallel
+concurrent_tasks = args.concurrency if args.concurrency<=5 else 5
 
-# Retrieve Postgres database configuration
-postgres_username = os.environ['ODS_USERNAME']
-postgres_password = os.environ['ODS_PASSWORD']
-postgres_host = os.environ['ODS_HOST']
-postgres_port = os.environ['ODS_PORT']
-postgres_database = os.environ['ODS_DATABASE']
-
-#Concurrent tasks - number of tables to be replicated in parallel
-concurrent_tasks = 5
-
-
-# In[8]:
-
-
-# Set up Oracle connection pool
+# In[6]: Set up Oracle connection pool
 dsn = oracledb.makedsn(host=oracle_host, port=oracle_port, service_name=oracle_database)
 OrcPool = oracledb.SessionPool(user=oracle_username, password=oracle_password, dsn=dsn, min=concurrent_tasks,
                              max=concurrent_tasks, increment=1, encoding="UTF-8")
-print(oracle_host, oracle_port, oracle_database, oracle_username, oracle_password)
-print('Oracle Pool Successful')
+#print(oracle_host, oracle_port, oracle_database, oracle_username, oracle_password)
+#print('Oracle Pool Successful')
 
-
-# In[9]:
-
-
+# In[7]: Setup Postgres Pool 
 PgresPool = psycopg2.pool.ThreadedConnectionPool(
     minconn = concurrent_tasks, maxconn = concurrent_tasks,host=postgres_host, port=postgres_port, dbname=postgres_database, user=postgres_username, password=postgres_password
 )
 print('Postgres Connection Successful')
 
-
-# In[10]:
-
-
+# In[8]: Function to get active rows from master table
 def get_active_tables(mstr_schema,app_name):
   postgres_connection  = PgresPool.getconn()  
   postgres_cursor = postgres_connection.cursor()
@@ -89,11 +102,7 @@ def get_active_tables(mstr_schema,app_name):
   PgresPool.putconn(postgres_connection)
   return rows
 
-
-# In[11]:
-
-
-# Function to extract data from Oracle
+# In[9]: Function to extract data from Oracle
 def extract_from_oracle(table_name,source_schema):
     # Acquire a connection from the pool
     oracle_connection = OrcPool.acquire()
@@ -111,11 +120,7 @@ def extract_from_oracle(table_name,source_schema):
         OrcPool.release(oracle_connection)
         return []
 
-
-# In[12]:
-
-
-# Function to load data into PostgreSQL using execute_batch
+# In[10]: Function to load data into Target PostgreSQL using data from Source Oracle
 def load_into_postgres(table_name, data,target_schema):
     postgres_connection = PgresPool.getconn()
     postgres_cursor = postgres_connection.cursor()
@@ -141,12 +146,8 @@ def load_into_postgres(table_name, data,target_schema):
         if postgres_connection:
             postgres_cursor.close()
             PgresPool.putconn(postgres_connection)
-        
 
-
-# In[13]:
-
-
+# In[11]: Function to call both extract and load functions
 def load_data_from_src_tgt(table_name,source_schema,target_schema):
         # Extract data from Oracle
         print(f'Source: Thread {table_name} started at ' + datetime.now().strftime("%H:%M:%S"))
@@ -159,16 +160,11 @@ def load_data_from_src_tgt(table_name,source_schema,target_schema):
             print(f"Target: Data loaded into table: {table_name}")
             print(f'Target: Thread {table_name} ended at ' + datetime.now().strftime("%H:%M:%S"))
 
-
-# In[14]:
-
-
+# In[12]: Initializing concurrency
 if __name__ == '__main__':
     # Main ETL process
-    #mstr_schema='app_rrs1'
-    #app_name='FTA'
     active_tables_rows =get_active_tables(mstr_schema,app_name) 
-    print(active_tables_rows)
+    #print(active_tables_rows)
     tables_to_extract = [(row[2],row[1],row[3]) for row in active_tables_rows]
     
     print(f"tables to extract are {tables_to_extract}")
@@ -198,10 +194,4 @@ if __name__ == '__main__':
     
     print("ETL process completed successfully.")
     print("The time of execution of the program is:", (end - start) , "secs")
-
-
-# In[ ]:
-
-
-
 

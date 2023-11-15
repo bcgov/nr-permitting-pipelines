@@ -40,10 +40,22 @@ ggplot() +
   geom_sf(data = geo_data) +
   theme_minimal()
 
+# Function to find centroid within feature
+st_centroid_within <- function(geometry) {
+  centroid <- poly %>% st_centroid()
+  in_poly <- st_within(centroid, poly, sparse = F)[[1]] 
+  if (in_poly) return(centroid)
+  centroid_in_poly <- st_point_on_surface(poly)
+  return(centroid_in_poly)
+  }
+
 ## FTA & RRS Data Processing ##
 
 file <- file.choose()
 fta_data <- fromJSON(file)
+
+file <- file.choose()
+rrs_data <- fromJSON(file)
 
 # Make sure SQL query is run with SDO_UTIL.TO_WKTGEOMETRY(GEOMETRY)
 fta_data_sf <- st_as_sf(fta_data, wkt = "GEOMETRY", crs = st_crs(nr_region))
