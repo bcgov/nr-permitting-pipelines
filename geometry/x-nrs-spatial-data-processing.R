@@ -1,5 +1,4 @@
-# DEMO: Spatial Data Processing & Geocoding for X-NRS Dashboard # 
-
+## DEMO: Spatial Data Processing & Geocoding for X-NRS Dashboard 
 library(dplyr)
 library(fuzzyjoin)
 library(bcdata)
@@ -42,11 +41,11 @@ ggplot() +
 
 # Function to find centroid within feature
 st_centroid_within <- function(geometry) {
-  centroid <- poly %>% st_centroid()
-  in_poly <- st_within(centroid, poly, sparse = F)[[1]] 
+  centroid <- geometry %>% st_centroid()
+  in_poly <- st_within(centroid, geometry, sparse = F)[[1]] 
   if (in_poly) return(centroid)
-  centroid_in_poly <- st_point_on_surface(poly)
-  return(centroid_in_poly)
+  point_on_surface <- st_point_on_surface(geometry)
+  return(point_on_surface)
   }
 
 ## FTA & RRS Data Processing ##
@@ -61,7 +60,7 @@ rrs_data <- fromJSON(file)
 fta_data_sf <- st_as_sf(fta_data, wkt = "GEOMETRY", crs = st_crs(nr_region))
 
 # Find centriod 
-fta_data_sf$centroid <- st_centroid(fta_data_sf$GEOMETRY)
+fta_data_sf$centroid <- st_centroid_within(fta_data_sf$GEOMETRY)
 
 # Remove polygons and lines (too big to pull into Power BI)
 fta_data_sf$GEOMETRY <- NULL
@@ -77,7 +76,6 @@ fta_data_sf <- fta_data_sf %>%
   st_transform(4326)
 
 ## ATS Geocoding ## 
-
 file <- file.choose()
 ats_data <- fromJSON(file)
 
