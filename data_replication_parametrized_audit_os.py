@@ -38,6 +38,7 @@ mstr_schema = os.environ['MSTR_SCHEMA']
 app_name = os.environ['APP_NAME']
 concurrent_tasks = int(os.environ['CONCUR_TASKS'])
 audit_table = 'audit_batch_status'
+current_date = datetime.now().strftime('%Y-%m-%d')
 
 #concurrent_tasks = int(concurrent_tasks)    
 #In[5]: Concurrent tasks - number of tables to be replicated in parallel
@@ -55,6 +56,17 @@ PgresPool = psycopg2.pool.ThreadedConnectionPool(
     minconn = concurrent_tasks, maxconn = concurrent_tasks,host=postgres_host, port=postgres_port, dbname=postgres_database, user=postgres_username, password=postgres_password
 )
 print('Postgres Connection Successful')
+
+def del_audit_entries_rerun(current_date):
+  postgres_connection  = PgresPool.getconn()  
+  postgres_cursor = postgres_connection.cursor()
+  del_sql = f"""
+  DELETE FROM {mstr_schema}.{audit_table} c
+  where application_name='{app_name}' and batch_run_date='{current_date}'
+  """
+  postgres_cursor.execute(del_sql)
+  postgres_connection.commit()
+  return []
 
 # In[8]: Function to get active rows from master table
 def get_active_tables(mstr_schema,app_name):
@@ -147,6 +159,8 @@ if __name__ == '__main__':
     
     print(f"tables to extract are {tables_to_extract}")
     print(f'No of concurrent tasks:{concurrent_tasks}')
+     #Delete audit entries for rerun on same day
+    del_audit_entries_rerun(current_date)
     # Using ThreadPoolExecutor to run tasks concurrently
     with concurrent.futures.ThreadPoolExecutor(max_workers=concurrent_tasks) as executor:
         # Submit tasks to the executor
