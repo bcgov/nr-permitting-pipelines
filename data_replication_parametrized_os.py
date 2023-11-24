@@ -19,7 +19,8 @@ import oracledb
 
 start = time.time()
  
-oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_21_12")
+# oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_21_12")
+
 # In[3]: Retrieve Oracle database configuration
 oracle_username = os.environ['DB_USERNAME']
 oracle_password = os.environ['DB_PASSWORD']
