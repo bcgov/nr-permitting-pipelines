@@ -67,6 +67,19 @@ def del_audit_entries_rerun(current_date):
   postgres_cursor.execute(del_sql)
   postgres_connection.commit()
   return []
+# Function to insert the audit batch status entry
+def audit_batch_status_insert(table_name,status):
+  postgres_connection  = PgresPool.getconn()  
+  postgres_cursor = postgres_connection.cursor()
+  try:
+    audit_batch_status_query = f"""INSERT INTO {mstr_schema}.{audit_table} VALUES ('{table_name}','{app_name}','replication','{status}',current_date)"""
+    postgres_cursor.execute(audit_batch_status_query)
+    postgres_connection.commit()
+    print(f"Record inserted into audit batch status table")
+    return None
+  except Exception as e:
+      print(f"Error inserting record into to audit batch status table: {str(e)}")
+      return None
 
 # In[8]: Function to get active rows from master table
 def get_active_tables(mstr_schema,app_name):
@@ -93,13 +106,14 @@ def extract_from_oracle(table_name,source_schema):
     oracle_cursor = oracle_connection.cursor()    
     try:
         # Use placeholders in the query and bind the table name as a parameter
-        sql_query = f'SELECT * FROM {mstr_schema}.{table_name}'
+        sql_query = f'SELECT * FROM {source_schema}.{table_name}'
         print(sql_query)
         oracle_cursor.execute(sql_query)
         rows = oracle_cursor.fetchall()
         OrcPool.release(oracle_connection)
         return rows
     except Exception as e:
+        audit_batch_status_insert(table_name,'failed')
         print(f"Error extracting data from Oracle: {str(e)}")
         OrcPool.release(oracle_connection)
         return []
@@ -123,14 +137,12 @@ def load_into_postgres(table_name, data,target_schema):
             data_to_insert = [(tuple(row)) for row in data]
             execute_batch(cursor, insert_query, data_to_insert)
             # Insert record to audit batch table        
-            audit_success_query = f"""INSERT INTO {mstr_schema}.{audit_table} VALUES ('{table_name}','{app_name}','replication','success',current_date)"""
-            postgres_cursor.execute(audit_success_query)
+            audit_batch_status_insert(table_name,'success')
             postgres_connection.commit()
         
     except Exception as e:
         print(f"Error loading data into PostgreSQL: {str(e)}")
-        audit_failure_query = f"""INSERT INTO {mstr_schema}.{audit_table} VALUES ('{table_name}','{app_name}','replication','failed',current_date)"""
-        postgres_cursor.execute(audit_failure_query)
+        audit_batch_status_insert(table_name,'failed')
     finally:
         # Return the connection to the pool
         if postgres_connection:
