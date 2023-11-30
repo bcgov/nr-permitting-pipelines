@@ -66,13 +66,17 @@ def del_audit_entries_rerun(current_date):
   """
   postgres_cursor.execute(del_sql)
   postgres_connection.commit()
-  return []
+  postgres_cursor.close()
+  PgresPool.putconn(postgres_connection)
+  return print(del_sql)
+
 # Function to insert the audit batch status entry
 def audit_batch_status_insert(table_name,status):
   postgres_connection  = PgresPool.getconn()  
   postgres_cursor = postgres_connection.cursor()
   try:
     audit_batch_status_query = f"""INSERT INTO {mstr_schema}.{audit_table} VALUES ('{table_name}','{app_name}','replication','{status}',current_date)"""
+    print(audit_batch_status_query)
     postgres_cursor.execute(audit_batch_status_query)
     postgres_connection.commit()
     print(f"Record inserted into audit batch status table")
@@ -80,6 +84,11 @@ def audit_batch_status_insert(table_name,status):
   except Exception as e:
       print(f"Error inserting record into to audit batch status table: {str(e)}")
       return None
+  finally:
+        # Return the connection to the pool
+        if postgres_connection:
+            postgres_cursor.close()
+            PgresPool.putconn(postgres_connection)
 
 # In[8]: Function to get active rows from master table
 def get_active_tables(mstr_schema,app_name):
@@ -136,9 +145,10 @@ def load_into_postgres(table_name, data,target_schema):
             # Prepare the data as a list of tuples
             data_to_insert = [(tuple(row)) for row in data]
             execute_batch(cursor, insert_query, data_to_insert)
+            postgres_connection.commit()
             # Insert record to audit batch table        
             audit_batch_status_insert(table_name,'success')
-            postgres_connection.commit()
+            
         
     except Exception as e:
         print(f"Error loading data into PostgreSQL: {str(e)}")
