@@ -14,6 +14,7 @@ spec:
         DataClass: High
         app: httpd
         deployment: permitting-pipeline
+        ConnectionType: database
     spec:
       containers:
         - name: permitting-pipeline-test
