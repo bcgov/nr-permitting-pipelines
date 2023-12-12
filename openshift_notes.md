@@ -79,7 +79,7 @@ oc create secret docker-registry artifactory `
 oc secrets link default artifactory
 ```
 
-## Helpful Helm commands
+# Helpful Helm commands
 
 ## Sourcing charts
 ```sh
