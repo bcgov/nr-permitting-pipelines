@@ -1,13 +1,13 @@
 # Common Issues & Solutions: 
 
-## Not able to pull from Docker Hub:
-### Solution 1: Use Artifactory remote proxy
+### Not able to pull from Docker Hub:
+**Solution 1:** Use Artifactory remote proxy
 ```sh 
     image: artifacts.developer.gov.bc.ca/docker-remote/openmetadata/server
     imagePullSecrets:
         - name: artifactory-pull
 ```    
-### Solution 2: Use GitHub container registry
+**Solution 2:** Use GitHub container registry
 ```sh 
   image:
     registry: ghcr.io
@@ -15,9 +15,9 @@
     tag: [tag from FROM line in Dockerfile]
 ```
 
-## Dir permission denied:
+### Dir permission denied:
 **Error Example:** unable to create open /etc/temporal/config/docker.yaml: permission denied 
-### Solution 1: Mount a volume for the file path
+**Solution 1:** Mount a volume for the file path
 ```sh 
   extraVolumeMounts:
     - name: dir
@@ -27,7 +27,7 @@
     - name: dir
       emptyDir: {}
 ```
-### Solution 2: Edit Dockerfile to explicitly grant permission
+**Solution 2:** Edit Dockerfile to explicitly grant permission
 ```sh 
 RUN chmod -R g+rwX /dir
 ```
