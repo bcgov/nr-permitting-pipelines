@@ -32,15 +32,18 @@
 RUN chmod -R g+rwX /dir
 ```
 
-## Service account permissions:
+### Service account permissions:
 **Error example:**
 roles.rbac.authorization.k8s.io "airbyte-admin-test" is forbidden (groups=["system:authenticated:oauth" "system:authenticated"]) is attempting to grant RBAC permissions not currently held
+
 **Solution:** created Role and Role Binding (assign needed permissions to Service Account)
 
 ### Binding to privileged ports as non-root user
 **Error example:** "[emerg] bind() to 0.0.0.0:80 failed (13: Permission denied)"
+
 **Solution:** Set container port to 8080 instead of 80. Service ports can be 80. 
-### Container 
+
+### Some built-in init process is failing 
 **Solution:** Use LifeCycle Hooks
 ```sh 
   lifecycle:
@@ -53,7 +56,7 @@ roles.rbac.authorization.k8s.io "airbyte-admin-test" is forbidden (groups=["syst
 **Solution:** Increase memory limit (keep requests as low as possible)
 
 ## Pods failing readiness and liveliness probes
-**Solution:** Extend initalDelaySeconds
+**Solution:** Extend initalDelaySeconds. Usually just means the pod is taking a while to start up. 
 
 # Artifactory Notes
 
