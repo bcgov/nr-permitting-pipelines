@@ -22,21 +22,21 @@ start = time.time()
 # oracledb.init_oracle_client(lib_dir="/opt/oracle/instantclient_21_12")
 
 # In[3]: Retrieve Oracle database configuration
-oracle_username = os.environ['DB_USERNAME']
-oracle_password = os.environ['DB_PASSWORD']
-oracle_host = os.environ['DB_HOST']
-oracle_port = os.environ['DB_PORT']
-oracle_database = os.environ['DATABASE']
+oracle_username = 'PROXY_FTA_PMT_REPLICATION'
+oracle_password = 'Bz#ff6118slP'
+oracle_host = 'nrcdb03.bcgov'
+oracle_port = '1521'
+oracle_database = 'dbq01.nrs.bcgov'
 # In[4]: Retrieve Postgres database configuration
-postgres_username = os.environ['ODS_USERNAME']
-postgres_password = os.environ['ODS_PASSWORD']
-postgres_host = os.environ['ODS_HOST']
-postgres_port = os.environ['ODS_PORT']
-postgres_database = os.environ['ODS_DATABASE']
+postgres_username = 'ods_admin_user'
+postgres_password = 'Y7ss#by641'
+postgres_host = 'theory.bcgov'
+postgres_port = '5433'
+postgres_database = 'odsdev'
 # In[5]: Script parameters
-mstr_schema = os.environ['MSTR_SCHEMA']
-app_name = os.environ['APP_NAME']
-concurrent_tasks = int(os.environ['CONCUR_TASKS'])
+mstr_schema = 'ods_data_management'
+app_name = 'FTA'
+concurrent_tasks = int('2')
 audit_table = 'audit_batch_status'
 current_date = datetime.now().strftime('%Y-%m-%d')
 
@@ -108,23 +108,46 @@ def get_active_tables(mstr_schema,app_name):
   PgresPool.putconn(postgres_connection)
   return rows
 
+def DateTimeConverter(value):
+    if value.startswith('9999'):
+        return None
+    return datetime.datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+
+
+def OutputHandler(cursor, name, defaulttype, length, precision, scale):
+    if defaulttype == oracledb.DATETIME:
+        return cursor.var(oracledb.STRING, arraysize=cursor.arraysize,
+                          outconverter=DateTimeConverter)
+
+def releaseoracleconnpool(oracle_connection):
+    try:
+        if oracle_connection.ping():
+            OrcPool.release(oracle_connection)
+            print("Connection released successfully.")
+        else:
+            print("Connection is not active. No need to release.")
+    except:
+        audit_batch_status_insert(table_name,'failed')
+
 # In[9]: Function to extract data from Oracle
 def extract_from_oracle(table_name,source_schema):
     # Acquire a connection from the pool
     oracle_connection = OrcPool.acquire()
+    OrcPool.outputtypehandler = OutputHandler
     oracle_cursor = oracle_connection.cursor()    
     try:
         # Use placeholders in the query and bind the table name as a parameter
-        sql_query = f'SELECT * FROM {source_schema}.{table_name}'
+        sql_query = f'Select * FROM {source_schema}.{table_name}'
         print(sql_query)
         oracle_cursor.execute(sql_query)
         rows = oracle_cursor.fetchall()
-        OrcPool.release(oracle_connection)
+        releaseoracleconnpool(oracle_connection)
+        #OrcPool.release(oracle_connection)
         return rows
     except Exception as e:
         audit_batch_status_insert(table_name,'failed')
         print(f"Error extracting data from Oracle: {str(e)}")
-        #OrcPool.release(oracle_connection)  #Temporary change
+        #OrcPool.release(oracle_connection)
         return []
 
 # In[10]: Function to load data into Target PostgreSQL using data from Source Oracle
