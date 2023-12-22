@@ -46,11 +46,11 @@ SELECT
     hva_skey,
     road_section_guid,
     age,
-	nr_region,
-	nr_district,
-	 -- takes the geometry center or best fit point
-	 COALESCE(point_lat, average_lat) AS latitude,
-	 COALESCE(point_lon, average_lon) AS longitude
+    nr_region,
+    nr_district,
+    -- takes the geometry center or best fit point
+    COALESCE(point_lat, average_lat) AS latitude,
+    COALESCE(point_lon, average_lon) AS longitude
 FROM
 	(SELECT *,
 	 	-- takes ATS nr_region where available otherwise use calculated nr_region 
