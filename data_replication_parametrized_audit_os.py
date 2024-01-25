@@ -114,21 +114,21 @@ def extract_from_oracle(table_name,source_schema,customsql_ind,customsql_query):
     oracle_connection = OrcPool.acquire()
     oracle_cursor = oracle_connection.cursor()    
     try:
-        if customsql_ind == "N":
+        if customsql_ind == "Y":
             # Use placeholders in the query and bind the table name as a parameter
-            sql_query = f'SELECT * FROM {source_schema}.{table_name}'
-            print(sql_query)
-            oracle_cursor.execute(sql_query)
-            rows = oracle_cursor.fetchall()
-            OrcPool.release(oracle_connection)
-            return rows
-        else:
             sql_query=customsql_query
             print(sql_query)
             oracle_cursor.execute(sql_query)
             rows = oracle_cursor.fetchall()
             OrcPool.release(oracle_connection)
-            return rows    
+            return rows 
+        else:
+            sql_query = f'SELECT * FROM {source_schema}.{table_name}'
+            print(sql_query)
+            oracle_cursor.execute(sql_query)
+            rows = oracle_cursor.fetchall()
+            OrcPool.release(oracle_connection)
+            return rows   
     except Exception as e:
         audit_batch_status_insert(table_name,'failed')
         print(f"Error extracting data from Oracle: {str(e)}")
