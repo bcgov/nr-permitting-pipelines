@@ -1,6 +1,14 @@
 ﻿# nr-permitting-pipelines
 
-**Update Dec. 28**: Moved Docker image from OC Imagestream to GHCR to be accessed by Airflow DAG. 
+##  Use of GHCR
+Container images are built automatically and pushed to the GHCR any time there is a push or PR to the **main** branch. Images are named according to the file path and tagged with the branch name. Use the image name in an Airflow DAG to create a job using the nr-permitting-pipelines container. See Airflow example here: [permitting_pipeline_ats.py](https://github.com/bcgov/nr-airflow/blob/e45c83f933d1f96e479a36a3e765dabd61e1ff2e/dags/permitting_pipeline_ats.py#L18C16-L18C58) 
+
+Usage example: 
+```sh
+docker pull ghcr.io/bcgov/nr-permitting-pipelines:main
+```
+
+Alternatively, there is this manual workflow: 
 
 Build locally: 
 ```sh
@@ -19,4 +27,8 @@ Deploy to OpenShift. Note: Make sure to update the deployment name, env (config 
 ```sh
 oc apply -f deployment.yaml
 ```
+
+Note: If you add a new Dockerfile, a new GitHub Actions workflow needs to be created to publish the container to the GHCR.
+
+
 
