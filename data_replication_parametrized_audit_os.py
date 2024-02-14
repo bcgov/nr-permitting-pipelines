@@ -184,7 +184,7 @@ def load_data_from_src_tgt(table_name,source_schema,target_schema,customsql_ind,
 if __name__ == '__main__':
     # Main ETL process
     active_tables_rows =get_active_tables(mstr_schema,app_name) 
-    #print(active_tables_rows)
+    print(active_tables_rows)
     tables_to_extract = [(row[2],row[1],row[3],row[9],row[10]) for row in active_tables_rows]
     
     print(f"tables to extract are {tables_to_extract}")
