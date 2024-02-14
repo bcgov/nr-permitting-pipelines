@@ -114,8 +114,10 @@ def extract_from_oracle(table_name,source_schema,customsql_ind,customsql_query):
     oracle_connection = OrcPool.acquire()
     oracle_cursor = oracle_connection.cursor()    
     try:
-     current_time = datetime.datetime.now()
-     print("Replication Start:", current_time)
+        
+        current_time = datetime.datetime.now()
+        print("Replication Start:", current_time)
+     
         if customsql_ind == "Y":
             # Use placeholders in the query and bind the table name as a parameter
             sql_query=customsql_query
