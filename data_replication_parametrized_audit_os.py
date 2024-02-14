@@ -114,10 +114,6 @@ def extract_from_oracle(table_name,source_schema,customsql_ind,customsql_query):
     oracle_connection = OrcPool.acquire()
     oracle_cursor = oracle_connection.cursor()    
     try:
-        
-        current_time = datetime.datetime.now()
-        print("Replication Start:", current_time)
-     
         if customsql_ind == "Y":
             # Use placeholders in the query and bind the table name as a parameter
             sql_query=customsql_query
@@ -151,9 +147,6 @@ def load_into_postgres(table_name, data,target_schema):
         # Build the INSERT query with placeholders
         insert_query = f'INSERT INTO {target_schema}.{table_name} VALUES ({", ".join(["%s"] * len(data[0]))})'
         #insert_query = f'INSERT INTO {target_schema}.{table_name} VALUES %s'
-
-        current_time = datetime.datetime.now()
-        print("Replication End:", current_time)
 
         # Use execute_batch for efficient batch insert
         with postgres_connection.cursor() as cursor:
